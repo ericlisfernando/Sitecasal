@@ -1,0 +1,32 @@
+name: Stage temporary Instagram deployment source
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/stage-instagram-source-20260814.yml
+permissions:
+  contents: write
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Fetch staged source
+        run: |
+          set -euo pipefail
+          base='https://ehugeuyzdofhbkmpnxsm.supabase.co/storage/v1/object/public/announcement-screenshots/temp-deploy-source-20260814'
+          root='temp-deploy-source-20260814/supabase/functions'
+          mkdir -p "$root/publish-announcement-to-instagram" "$root/_shared"
+          curl --fail --retry 3 "$base/supabase/functions/publish-announcement-to-instagram/index.ts" -o "$root/publish-announcement-to-instagram/index.ts"
+          curl --fail --retry 3 "$base/supabase/functions/_shared/authGuard.ts" -o "$root/_shared/authGuard.ts"
+          curl --fail --retry 3 "$base/supabase/functions/_shared/instagramPublishPolicy.ts" -o "$root/_shared/instagramPublishPolicy.ts"
+      - name: Commit staged source
+        run: |
+          git config user.name "ChatGPT Production Deploy"
+          git config user.email "actions@github.com"
+          git add temp-deploy-source-20260814
+          git commit -m "chore: add temporary Instagram deployment source"
+          git push origin HEAD:main
